@@ -1,4 +1,4 @@
-// URL base del backend
+// URL base del backend - funciona en desarrollo y producción
 const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3001/api' 
     : '/api';
@@ -179,7 +179,8 @@ async function checkBackendStatus() {
             console.log('✅ Backend conectado correctamente');
         }
     } catch (error) {
-        console.warn('⚠️ No se pudo conectar al backend. Asegúrate de que esté funcionando en el puerto 5000');
+        console.warn('⚠️ No se pudo conectar al backend. Asegúrate de que esté funcionando en el puerto 3001 (desarrollo) o que esté desplegado correctamente');
+        console.error('Error conectando al backend:', error);
         
         // Mostrar mensaje en la página
         const statusDiv = document.createElement('div');
@@ -195,4 +196,3 @@ async function checkBackendStatus() {
 
 // Verificar estado del backend al cargar
 checkBackendStatus();
-
