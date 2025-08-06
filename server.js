@@ -1,24 +1,6 @@
 /* backend/server.js */
-const express = require// Basic API route
-app.get('/api', (req, res) => {
-    res.json({ 
-        message: 'API funcionando correctamente con SISTEMA PERSISTENTE!',
-        mode: 'Persistente (archivos JSON)',
-        note: 'Las cuentas y datos se guardan PERMANENTEMENTE',
-        storage: 'Archivos JSON locales - datos persistentes'
-    });
-});
-
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Server running on port ${PORT}`);
-    console.log(`🌐 Frontend available at: http://localhost:${PORT}`);
-    console.log(`🔌 API available at: http://localhost:${PORT}/api`);
-    console.log(`🔐 Admin panel available at: http://localhost:${PORT}/admin.html`);
-    console.log(`💾 MODO PERSISTENTE: Los usuarios se guardan PERMANENTEMENTE`);
-    console.log('🧟 ¡Bienvenido a Terraz Survival Store - Versión Persistente!');
-});t path = require('path');
-const authRoutes = require('./routes/authRoutes');
+const express = require('express');
+const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -37,10 +19,11 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes - usando controladores persistentes
+const authRoutes = require('./routes/authRoutes-persistent');
 app.use('/api/auth', authRoutes);
 
 // Import admin routes con sistema persistente
-const adminRoutes = require('./routes/adminRoutes');
+const adminRoutes = require('./routes/adminRoutes-persistent');
 app.use('/api/admin', adminRoutes);
 
 // Ruta para servir la página principal
@@ -66,9 +49,10 @@ app.get('/admin.html', (req, res) => {
 // Basic API route
 app.get('/api', (req, res) => {
     res.json({ 
-        message: 'API funcionando correctamente!',
-        mode: 'Temporal (sin MongoDB)',
-        note: 'Los datos se almacenan en memoria'
+        message: 'API funcionando correctamente con SISTEMA PERSISTENTE!',
+        mode: 'Persistente (archivos JSON)',
+        note: 'Las cuentas y datos se guardan PERMANENTEMENTE',
+        storage: 'Archivos JSON locales - datos persistentes'
     });
 });
 
@@ -77,7 +61,7 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Server running on port ${PORT}`);
     console.log(`🌐 Frontend available at: http://localhost:${PORT}`);
     console.log(`🔌 API available at: http://localhost:${PORT}/api`);
-    console.log(`� Admin panel available at: http://localhost:${PORT}/admin.html`);
-    console.log(`�📝 Modo temporal: Los usuarios se guardan en memoria`);
-    console.log('🧟 ¡Bienvenido a Terraz Survival Store!');
+    console.log(`🔐 Admin panel available at: http://localhost:${PORT}/admin.html`);
+    console.log(`💾 MODO PERSISTENTE: Los usuarios se guardan PERMANENTEMENTE`);
+    console.log('🧟 ¡Bienvenido a Terraz Survival Store - Versión Persistente!');
 });
