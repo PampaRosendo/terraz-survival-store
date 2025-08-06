@@ -2,7 +2,7 @@
   "name": "terraz-survival-store",
   "version": "1.0.0",
   "description": "Terraz Survival Store - Project Zomboid themed survival shop with casino games",
-  "main": "server.js",
+  "main": "server-fixed.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
@@ -21,3 +21,4 @@
     "node": ">=18.0.0"
   }
 }
+
