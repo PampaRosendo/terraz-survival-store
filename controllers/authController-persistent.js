@@ -7,13 +7,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'tu-jwt-secret-super-seguro-aqui';
 
 exports.register = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { email, password } = req.body;
 
-        if (!username || !email || !password) {
-            return res.status(400).json({ error: 'Todos los campos son requeridos' });
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email y contraseña son requeridos' });
         }
 
-        const user = await User.create({ username, email, password });
+        const user = await User.create({ email, password });
         
         // No devolver la contraseña
         const { password: _, ...userWithoutPassword } = user;
