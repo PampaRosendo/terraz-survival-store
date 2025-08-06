@@ -4,7 +4,7 @@
   "description": "Backend API with authentication",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server-persistent.js",
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -23,3 +23,4 @@
     "nodemon": "^3.0.1"
   }
 }
+
