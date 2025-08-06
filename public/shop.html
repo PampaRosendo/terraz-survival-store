@@ -15,10 +15,14 @@
                 <p>Tu tienda de supervivencia post-apocalíptica</p>
                 <div class="user-panel">
                     <span id="welcome-user">Bienvenido, Superviviente</span>
-                                    <div class="buttons">
-                    <button id="games-btn" class="nav-btn">🎮 Juegos</button>
-                    <button id="logout-btn-shop" class="logout-btn">Cerrar Sesión</button>
-                </div>
+                    <div class="buttons">
+                        <button id="cart-btn" class="nav-btn" onclick="toggleCart()">
+                            🛒 Carrito
+                            <span id="cart-counter" class="cart-counter" style="display: none;">0</span>
+                        </button>
+                        <button id="games-btn" class="nav-btn">🎮 Juegos</button>
+                        <button id="logout-btn-shop" class="logout-btn">Cerrar Sesión</button>
+                    </div>
                 </div>
             </div>
             <div class="stats-panel">
@@ -56,6 +60,20 @@
         <!-- Grid de productos -->
         <div class="products-grid" id="products-grid">
             <!-- Los productos se cargarán dinámicamente -->
+        </div>
+
+        <!-- Panel del Carrito -->
+        <div id="cart-panel" class="cart-panel" style="display: none;">
+            <div class="cart-header">
+                <h3>🛒 Tu Carrito</h3>
+                <button onclick="toggleCart()" class="close-cart">×</button>
+            </div>
+            <div id="cart-items" class="cart-items">
+                <!-- Los items del carrito se cargarán aquí -->
+            </div>
+            <div id="cart-total" class="cart-total">
+                <!-- Total y botón de compra se mostrarán aquí -->
+            </div>
         </div>
 
         <!-- Inventario del jugador -->
