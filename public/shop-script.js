@@ -1637,3 +1637,191 @@ function randomEvent() {
 
 // Simular eventos aleatorios cada 2 minutos
 setInterval(randomEvent, 120000);
+
+// ================================
+// SISTEMA DE DISCORD WEBHOOK
+// ================================
+
+// URL base del API
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3001/api' 
+    : '/api';
+
+// Función para procesar compra final y enviar a Discord
+async function processPurchase() {
+    try {
+        // Verificar que hay items en el carrito
+        if (cart.length === 0) {
+            showNotification('❌ Tu carrito está vacío', 'error');
+            return;
+        }
+
+        // Obtener email del usuario (desde localStorage si está logueado)
+        const userEmail = localStorage.getItem('userEmail') || prompt('Ingresa tu email para completar la compra:');
+        
+        if (!userEmail) {
+            showNotification('❌ Email requerido para completar la compra', 'error');
+            return;
+        }
+
+        // Calcular total
+        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+        // Verificar fondos
+        if (playerState.money < total) {
+            showNotification(`❌ Fondos insuficientes. Necesitas $${total - playerState.money} más`, 'error');
+            return;
+        }
+
+        // Preparar datos de la compra
+        const purchaseData = {
+            customerEmail: userEmail,
+            items: cart.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                category: item.category || 'unknown'
+            })),
+            total: total
+        };
+
+        // Mostrar loading
+        showNotification('🔄 Procesando compra...', 'info');
+
+        // Enviar compra al backend (que enviará a Discord)
+        const response = await fetch(`${API_BASE_URL}/shop/purchase`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(purchaseData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Compra exitosa
+            playerState.money -= total;
+            updatePlayerStats();
+            
+            // Limpiar carrito
+            cart.length = 0;
+            updateCartDisplay();
+            
+            // Mostrar éxito
+            showNotification(`🎉 ${result.message}`, 'success');
+            showNotification(`📋 ID de pedido: ${result.orderId}`, 'info');
+            
+            if (result.discordSent) {
+                showNotification('📨 Ticket enviado a Discord automáticamente', 'success');
+            }
+            
+            if (result.warning) {
+                showNotification(`⚠️ ${result.warning}`, 'warning');
+            }
+            
+        } else {
+            throw new Error(result.error || 'Error procesando compra');
+        }
+
+    } catch (error) {
+        console.error('Error en compra:', error);
+        showNotification(`❌ Error: ${error.message}`, 'error');
+    }
+}
+
+// Función para mostrar notificaciones mejoradas
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+    
+    // Estilos inline para las notificaciones
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+        max-width: 400px;
+        animation: slideIn 0.3s ease;
+        margin-bottom: 10px;
+    `;
+    
+    // Colores según tipo
+    const colors = {
+        success: '#4CAF50',
+        error: '#f44336',
+        warning: '#ff9800',
+        info: '#2196F3'
+    };
+    
+    notification.style.backgroundColor = colors[type] || colors.info;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove después de 5 segundos
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Agregar botón de compra al carrito
+function updateCartDisplay() {
+    const cartItems = document.getElementById('cart-items');
+    const cartTotal = document.getElementById('cart-total');
+    
+    if (!cartItems || !cartTotal) return;
+    
+    // Limpiar contenido actual
+    cartItems.innerHTML = '';
+    
+    if (cart.length === 0) {
+        cartItems.innerHTML = '<p>Tu carrito está vacío</p>';
+        cartTotal.innerHTML = '<strong>Total: $0</strong>';
+        return;
+    }
+    
+    // Mostrar items del carrito
+    let total = 0;
+    cart.forEach((item, index) => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        
+        cartItems.innerHTML += `
+            <div class="cart-item">
+                <span>${item.name} x${item.quantity}</span>
+                <span>$${itemTotal}</span>
+                <button onclick="removeFromCart(${index})" class="remove-btn">🗑️</button>
+            </div>
+        `;
+    });
+    
+    // Mostrar total y botón de compra
+    cartTotal.innerHTML = `
+        <strong>Total: $${total}</strong>
+        <button onclick="processPurchase()" class="purchase-btn" style="
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            font-weight: bold;
+        ">
+            🛒 Finalizar Compra y Enviar a Discord
+        </button>
+    `;
+}
