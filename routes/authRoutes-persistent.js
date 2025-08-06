@@ -10,7 +10,7 @@ router.post('/register', register);
 // Ruta de login
 router.post('/login', login);
 
-// Ruta para obtener todos los usuarios (protegida)
-router.get('/users', verifyToken, getAllUsers);
+// Ruta para obtener todos los usuarios (libre para mostrar en frontend)
+router.get('/users', getAllUsers);
 
 module.exports = router;
