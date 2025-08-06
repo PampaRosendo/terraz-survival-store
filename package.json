@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Backend API with authentication",
-  "main": "server.js",
+  "main": "server-fixed.js",
   "scripts": {
     "start": "node server-persistent.js",
     "dev": "nodemon server-persistent.js",
@@ -25,3 +25,4 @@
     "nodemon": "^3.0.1"
   }
 }
+
