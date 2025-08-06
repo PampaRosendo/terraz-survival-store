@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Terraz - Minijuegos para Sobrevivir</title>
+    <link rel="stylesheet" href="games-styles.css">
+</head>
+<body>
+    <div class="casino-container">
+        <!-- Header del casino -->
+        <div class="casino-header">
+            <h1>🎰 Casino Terraz</h1>
+            <p>Gana dinero jugando para sobrevivir al apocalipsis</p>
+            <div class="player-stats">
+                <div class="stat">
+                    <span class="stat-label">💰 Dinero:</span>
+                    <span id="player-money" class="stat-value">$1500</span>
+                </div>
+                <div class="buttons">
+                    <button id="back-to-shop" class="nav-btn">🛒 Volver a Tienda</button>
+                    <button id="logout-games" class="logout-btn">🚪 Salir</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selector de juegos -->
+        <div class="games-selector">
+            <div class="game-card" data-game="snake">
+                <div class="game-icon">🐍</div>
+                <h3>Snake</h3>
+                <p>Clásico juego de la serpiente</p>
+                <div class="rewards">
+                    <span>🏆 $10 por comida</span>
+                    <span>💀 Pierdes $20 si mueres</span>
+                </div>
+                <button class="play-btn" onclick="startGame('snake')">Jugar</button>
+            </div>
+
+            <div class="game-card" data-game="tetris">
+                <div class="game-icon">🧩</div>
+                <h3>Tetris</h3>
+                <p>Apila bloques y gana dinero</p>
+                <div class="rewards">
+                    <span>🏆 $5 por línea</span>
+                    <span>🎯 Bonus por combo</span>
+                </div>
+                <button class="play-btn" onclick="startGame('tetris')">Jugar</button>
+            </div>
+
+            <div class="game-card" data-game="blackjack">
+                <div class="game-icon">🃏</div>
+                <h3>Blackjack</h3>
+                <p>Llega a 21 sin pasarte</p>
+                <div class="rewards">
+                    <span>🏆 Gana el doble de tu apuesta</span>
+                    <span>💸 Apuesta $25 por partida</span>
+                </div>
+                <button class="play-btn" onclick="startGame('blackjack')">Jugar</button>
+            </div>
+        </div>
+
+        <!-- Área de juego -->
+        <div id="game-area" class="game-area" style="display: none;">
+            <div class="game-header">
+                <h2 id="game-title">Juego</h2>
+                <div class="game-controls">
+                    <button id="pause-game" class="control-btn">⏸️ Pausa</button>
+                    <button id="quit-game" class="control-btn">🚪 Salir</button>
+                </div>
+            </div>
+            <div id="game-canvas-container">
+                <canvas id="game-canvas" width="400" height="400"></canvas>
+            </div>
+            <div id="game-info">
+                <div id="score-display">Puntos: 0</div>
+                <div id="money-earned">Dinero ganado: $0</div>
+            </div>
+        </div>
+
+        <!-- Juego de Blackjack -->
+        <div id="blackjack-game" class="blackjack-container" style="display: none;">
+            <div class="blackjack-header">
+                <h2>🃏 Blackjack vs Casa</h2>
+                <div class="blackjack-stats">
+                    <div>Apuesta actual: $<span id="current-bet-bj">25</span></div>
+                    <div>Objetivo: Llegar a 21 sin pasarte</div>
+                </div>
+            </div>
+            
+            <div class="blackjack-table">
+                <div class="dealer-area">
+                    <h3>🏠 Casa (Dealer)</h3>
+                    <div class="hand-value">Valor: <span id="dealer-value">?</span></div>
+                    <div id="dealer-cards" class="cards-container">
+                        <!-- Cartas del dealer -->
+                    </div>
+                </div>
+
+                <div class="table-center">
+                    <div id="game-result" class="game-message"></div>
+                    <div class="blackjack-actions">
+                        <button id="hit-btn" class="blackjack-action-btn">Pedir Carta</button>
+                        <button id="stand-btn" class="blackjack-action-btn">Plantarse</button>
+                        <button id="double-btn" class="blackjack-action-btn">Doblar</button>
+                        <button id="new-game-btn" class="blackjack-action-btn primary">Nueva Partida</button>
+                    </div>
+                </div>
+
+                <div class="player-area">
+                    <h3>👤 Tu Mano</h3>
+                    <div class="hand-value">Valor: <span id="player-value">0</span></div>
+                    <div id="player-cards" class="cards-container">
+                        <!-- Cartas del jugador -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial de ganancias -->
+        <div class="earnings-history">
+            <h3>📊 Historial de Ganancias</h3>
+            <div id="earnings-list">
+                <div class="earning-item">¡Bienvenido al casino! Comienza a jugar para ganar dinero.</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="games-script.js"></script>
+</body>
+</html>
