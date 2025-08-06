@@ -1,5 +1,7 @@
 // URL base del backend
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3001/api' 
+    : '/api';
 
 // Variables globales
 let currentToken = null;
@@ -193,3 +195,4 @@ async function checkBackendStatus() {
 
 // Verificar estado del backend al cargar
 checkBackendStatus();
+
