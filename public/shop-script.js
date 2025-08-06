@@ -1386,6 +1386,7 @@ let playerState = {
 
 // Variables globales
 let currentCategory = 'weapons';
+let cart = []; // Sistema de carrito para Discord webhook
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
@@ -1507,6 +1508,10 @@ function displayProducts(category) {
                 <button class="buy-btn" onclick="buyProduct(${product.id})" 
                         ${playerState.money < product.price ? 'disabled' : ''}>
                     ${playerState.money < product.price ? 'Sin dinero' : 'Comprar'}
+                </button>
+                <button class="cart-btn" onclick="addToCart(${product.id})" 
+                        style="background: #2196F3; margin-left: 5px;">
+                    🛒 Carrito
                 </button>
             </div>
         </div>
@@ -1637,6 +1642,64 @@ function randomEvent() {
 
 // Simular eventos aleatorios cada 2 minutos
 setInterval(randomEvent, 120000);
+
+// ================================
+// SISTEMA DE CARRITO PARA DISCORD
+// ================================
+
+// Agregar producto al carrito
+function addToCart(productId) {
+    const product = findProductById(productId);
+    if (!product) return;
+    
+    // Verificar si ya existe en el carrito
+    const existingItem = cart.find(item => item.id === productId);
+    
+    if (existingItem) {
+        existingItem.quantity += 1;
+        showNotification(`➕ ${product.name} agregado al carrito (${existingItem.quantity})`, 'success');
+    } else {
+        cart.push({
+            ...product,
+            quantity: 1,
+            category: currentCategory
+        });
+        showNotification(`🛒 ${product.name} agregado al carrito`, 'success');
+    }
+    
+    updateCartDisplay();
+    updateCartCounter();
+}
+
+// Remover item del carrito
+function removeFromCart(index) {
+    const removedItem = cart[index];
+    cart.splice(index, 1);
+    showNotification(`🗑️ ${removedItem.name} removido del carrito`, 'warning');
+    updateCartDisplay();
+    updateCartCounter();
+}
+
+// Actualizar contador del carrito
+function updateCartCounter() {
+    const counter = document.getElementById('cart-counter');
+    if (counter) {
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        counter.textContent = totalItems;
+        counter.style.display = totalItems > 0 ? 'block' : 'none';
+    }
+}
+
+// Mostrar/ocultar carrito
+function toggleCart() {
+    const cartPanel = document.getElementById('cart-panel');
+    if (cartPanel.style.display === 'none' || cartPanel.style.display === '') {
+        cartPanel.style.display = 'block';
+        updateCartDisplay();
+    } else {
+        cartPanel.style.display = 'none';
+    }
+}
 
 // ================================
 // SISTEMA DE DISCORD WEBHOOK
