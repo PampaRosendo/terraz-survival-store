@@ -26,6 +26,10 @@ app.use('/api/auth', authRoutes);
 const adminRoutes = require('./routes/adminRoutes-persistent');
 app.use('/api/admin', adminRoutes);
 
+// Import shop routes para Discord webhooks
+const shopRoutes = require('./routes/shopRoutes');
+app.use('/api/shop', shopRoutes);
+
 // Ruta para servir la página principal
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
