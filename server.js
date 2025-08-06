@@ -21,6 +21,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 app.use('/api/auth', authRoutes);
 
+// Import admin routes
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api/admin', adminRoutes);
+
 // Ruta para servir la página principal
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -34,6 +38,11 @@ app.get('/shop.html', (req, res) => {
 // Ruta para los juegos
 app.get('/games.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'games.html'));
+});
+
+// Ruta para el panel de admin
+app.get('/admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 // Basic API route
@@ -50,6 +59,7 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Server running on port ${PORT}`);
     console.log(`🌐 Frontend available at: http://localhost:${PORT}`);
     console.log(`🔌 API available at: http://localhost:${PORT}/api`);
-    console.log(`📝 Modo temporal: Los usuarios se guardan en memoria`);
+    console.log(`� Admin panel available at: http://localhost:${PORT}/admin.html`);
+    console.log(`�📝 Modo temporal: Los usuarios se guardan en memoria`);
     console.log('🧟 ¡Bienvenido a Terraz Survival Store!');
 });
