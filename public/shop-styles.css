@@ -1,3 +1,90 @@
+/* Botón flotante de carrito moderno */
+.cart-fab {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    background: linear-gradient(135deg, #ff6b35 60%, #d4af37 100%);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    font-size: 2.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    transition: transform 0.2s;
+}
+.cart-fab:hover {
+    transform: scale(1.08);
+    background: linear-gradient(135deg, #d4af37 60%, #ff6b35 100%);
+}
+.cart-fab-icon {
+    margin-right: 0;
+}
+
+/* Modal centrado para el carrito */
+.cart-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+.cart-modal {
+    background: #1a0e08;
+    border-radius: 18px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+    padding: 32px 28px 24px 28px;
+    min-width: 340px;
+    max-width: 95vw;
+    min-height: 220px;
+    max-height: 80vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.cart-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+.close-cart {
+    background: none;
+    border: none;
+    color: #ff6b35;
+    font-size: 2em;
+    cursor: pointer;
+    margin-left: 10px;
+}
+.buy-btn {
+    margin-top: 18px;
+    background: linear-gradient(90deg, #ff6b35 60%, #d4af37 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transition: background 0.2s, transform 0.2s;
+}
+.buy-btn:hover {
+    background: linear-gradient(90deg, #d4af37 60%, #ff6b35 100%);
+    transform: scale(1.04);
+}
 /* Estilos para la tienda de Project Zomboid */
 * {
     margin: 0;

@@ -1713,13 +1713,8 @@ function updateCartCounter() {
 
 // Mostrar/ocultar carrito
 function toggleCart() {
-    const cartPanel = document.getElementById('cart-panel');
-    if (cartPanel.style.display === 'none' || cartPanel.style.display === '') {
-        cartPanel.style.display = 'block';
-        updateCartDisplay();
-    } else {
-        cartPanel.style.display = 'none';
-    }
+    const panel = document.getElementById('cart-panel');
+    panel.style.display = (panel.style.display === 'flex' || panel.style.display === '') ? 'none' : 'flex';
 }
 
 // ================================
@@ -1730,6 +1725,9 @@ function toggleCart() {
 const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3001/api' 
     : '/api';
+
+// Webhook de Discord
+const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1402499129178984531/kF8JsLH4bJ427510eMdZrtpibKWas_QFc7mJ3PfrItgJMlw2H6DIt41gl-fHmQZ7sC_r";
 
 // Función para procesar compra final y enviar a Discord
 async function processPurchase() {
@@ -1914,4 +1912,27 @@ function updateCartDisplay() {
             🛒 Finalizar Compra y Enviar a Discord
         </button>
     `;
+}
+
+// Enviar carrito a Discord
+async function sendCartToDiscord(cartItems, total) {
+    const itemsList = cartItems.map(item => `• ${item.name} x${item.quantity} ($${item.price * item.quantity})`).join('\n');
+    const content = `🛒 **Nueva compra en Terraz Survival Store**\n\n${itemsList}\n\n**Total:** $${total}`;
+    await fetch(DISCORD_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+    });
+}
+
+// Lógica para el botón de compra
+if (document.getElementById('buy-btn')) {
+    document.getElementById('buy-btn').onclick = async function() {
+        const cartItems = getCartItems(); // Debe devolver [{name, price, quantity}]
+        const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        await sendCartToDiscord(cartItems, total);
+        alert('¡Compra enviada a Discord!');
+        clearCart();
+        toggleCart();
+    };
 }
