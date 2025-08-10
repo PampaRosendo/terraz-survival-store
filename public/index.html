@@ -33,38 +33,25 @@
         <!-- Sección de Login -->
         <div class="form-section" id="login-section">
             <h2>Iniciar Sesión</h2>
-            <form id="login-form">
-                <div class="input-group">
-                    <label for="login-username">Usuario:</label>
-                    <input type="text" id="login-username" name="username" required>
+            <div class="container">
+                <div class="header">
+                    <h1>Acceso Simple</h1>
+                    <p>Ingresa un nombre de usuario único para crear o acceder a tu cuenta. Solo puedes acceder desde este navegador.</p>
                 </div>
-                <div class="input-group">
-                    <label for="login-password">Contraseña:</label>
-                    <input type="password" id="login-password" name="password" required>
+                <div class="form-section" id="simple-login-section">
+                    <form id="simple-login-form">
+                        <div class="input-group">
+                            <label for="simple-username">Usuario:</label>
+                            <input type="text" id="simple-username" name="username" required>
+                        </div>
+                        <button type="submit">Entrar</button>
+                    </form>
+                    <div id="simple-login-message" class="message"></div>
                 </div>
-                <button type="submit">Iniciar Sesión</button>
-            </form>
-            <div id="login-message" class="message"></div>
-        </div>
-
-        <!-- Panel de Usuario Logueado -->
-        <div class="user-panel" id="user-panel" style="display: none;">
-            <h2>¡Bienvenido!</h2>
-            <p>Has iniciado sesión exitosamente.</p>
-            <p><strong>Token:</strong> <span id="user-token"></span></p>
-            <button id="logout-btn">Cerrar Sesión</button>
-        </div>
-
-        <!-- Lista de Usuarios (solo para mostrar registros) -->
-        <div class="users-section">
-            <h2>Usuarios Registrados</h2>
-            <div id="users-list">
-                <p>Los usuarios registrados aparecerán aquí...</p>
+                <div class="form-section" id="user-panel" style="display:none">
+                    <h2>Bienvenido, <span id="user-token"></span></h2>
+                    <button id="logout-btn">Cerrar Sesión</button>
+                    <div id="user-economy"></div>
+                </div>
             </div>
-            <button id="refresh-users">Actualizar Lista</button>
-        </div>
-    </div>
 
-    <script src="script.js"></script>
-</body>
-</html>

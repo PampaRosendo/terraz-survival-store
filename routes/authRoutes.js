@@ -1,12 +1,11 @@
 /* backend/routes/authRoutes.js */
 const express = require('express');
 
-// Usar controlador temporal sin MongoDB
-const { register, login, getAllUsers } = require('../controllers/authController.temp');
+const express = require('express');
+const { createOrGetSimpleUser, getUserEconomy } = require('../controllers/simpleUserController');
 const router = express.Router();
 
-router.post('/register', register);
-router.post('/login', login);
-router.get('/users', getAllUsers);
+router.post('/simple-user', createOrGetSimpleUser);
+router.get('/simple-user/:id/economy', getUserEconomy);
 
 module.exports = router;
