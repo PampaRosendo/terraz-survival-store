@@ -141,8 +141,8 @@ async function loadUsers() {
         if (response.users && response.users.length > 0) {
             usersList.innerHTML = response.users.map(user => `
                 <div class="user-item">
-                    <div class="user-username">${user.username}</div>
-                    <div class="user-id">ID: ${user.id || user._id || ''}</div>
+                    <div class="user-email">${user.email || ''}</div>
+                    <div class="user-id">ID: ${user._id || ''}</div>
                 </div>
             `).join('');
         } else {
