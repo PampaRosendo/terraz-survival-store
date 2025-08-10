@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Registro y Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Autenticación</h1>
+            <p>Registra tu cuenta o inicia sesión</p>
+        </div>
+        
+        <!-- Sección de Registro -->
+        <div class="form-section" id="register-section">
+            <h2>Registro</h2>
+            <form id="register-form">
+                <div class="input-group">
+                    <label for="register-username">Usuario:</label>
+                    <input type="text" id="register-username" name="username" required>
+                </div>
+                <div class="input-group">
+                    <label for="register-password">Contraseña:</label>
+                    <input type="password" id="register-password" name="password" required>
+                </div>
+                <button type="submit">Registrarse</button>
+            </form>
+            <div id="register-message" class="message"></div>
+        </div>
+
+        <!-- Sección de Login -->
+        <div class="form-section" id="login-section">
+            <h2>Iniciar Sesión</h2>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="login-username">Usuario:</label>
+                    <input type="text" id="login-username" name="username" required>
+                </div>
+                <div class="input-group">
+                    <label for="login-password">Contraseña:</label>
+                    <input type="password" id="login-password" name="password" required>
+                </div>
+                <button type="submit">Iniciar Sesión</button>
+            </form>
+            <div id="login-message" class="message"></div>
+        </div>
+
+        <!-- Panel de Usuario Logueado -->
+        <div class="user-panel" id="user-panel" style="display: none;">
+            <h2>¡Bienvenido!</h2>
+            <p>Has iniciado sesión exitosamente.</p>
+            <p><strong>Token:</strong> <span id="user-token"></span></p>
+            <button id="logout-btn">Cerrar Sesión</button>
+        </div>
+
+        <!-- Lista de Usuarios (solo para mostrar registros) -->
+        <div class="users-section">
+            <h2>Usuarios Registrados</h2>
+            <div id="users-list">
+                <p>Los usuarios registrados aparecerán aquí...</p>
+            </div>
+            <button id="refresh-users">Actualizar Lista</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
