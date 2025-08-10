@@ -12,17 +12,10 @@ Una tienda de supervivencia temática de Project Zomboid con casino integrado.
 
 ## 🚀 Tecnologías
 
-- **Backend**: Node.js + Express
-- **Frontend**: HTML5 + CSS3 + JavaScript
-- **Autenticación**: JWT + bcryptjs
-- **Base de Datos**: En memoria (temporal)
 
-## 🏪 Categorías de la Tienda
+Este directorio ya no contiene código relevante. Puedes eliminarlo si lo deseas.
 
 1. **Books** - Libros de habilidades y conocimiento
-2. **Food** - Comida y bebidas para supervivencia
-3. **Tools** - Herramientas esenciales
-4. **Materials** - Materiales de construcción
 5. **Medical** - Suministros médicos
 6. **Containers** - Contenedores y almacenamiento
 7. **Clothing** - Ropa y protección
