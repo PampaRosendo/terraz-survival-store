@@ -18,6 +18,40 @@
     font-size: 1.2em;
     text-align: center;
 }
+
+.user-input-section {
+    margin-bottom: 15px;
+}
+
+.user-input-section label {
+    display: block;
+    margin-bottom: 5px;
+    color: #d4af37;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.user-input-section input {
+    width: 100%;
+    padding: 8px 12px;
+    background: #2c1810;
+    border: 2px solid #ff6b35;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.9em;
+    box-sizing: border-box;
+}
+
+.user-input-section input:focus {
+    outline: none;
+    border-color: #d4af37;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+.user-input-section input::placeholder {
+    color: #888;
+}
+
 .purchase-list {
     list-style: none;
     padding: 0;

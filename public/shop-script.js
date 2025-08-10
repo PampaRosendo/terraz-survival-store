@@ -1421,6 +1421,21 @@ function initializeShop() {
     displayProducts(currentCategory);
     updatePlayerStats();
     updatePurchaseListDisplay();
+    loadSavedUsername();
+}
+
+// Cargar usuario guardado
+function loadSavedUsername() {
+    const usernameInput = document.getElementById('username-input');
+    const savedUsername = localStorage.getItem('terraz-username');
+    if (savedUsername && usernameInput) {
+        usernameInput.value = savedUsername;
+    }
+}
+
+// Guardar usuario en localStorage
+function saveUsername(username) {
+    localStorage.setItem('terraz-username', username);
 }
 
 // Función para encontrar producto por ID
@@ -1510,6 +1525,17 @@ function setupEventListeners() {
         });
     }
 
+    // Input de usuario - guardar automáticamente
+    const usernameInput = document.getElementById('username-input');
+    if (usernameInput) {
+        usernameInput.addEventListener('input', function() {
+            const username = this.value.trim();
+            if (username) {
+                saveUsername(username);
+            }
+        });
+    }
+
     // Escuchar actualizaciones de dinero desde los juegos
     window.addEventListener('message', function(event) {
         if (event.data.type === 'updateMoney') {
@@ -1580,8 +1606,10 @@ function addToPurchaseList(productId) {
     const existing = purchaseList.find(item => item.id === productId);
     if (existing) {
         existing.quantity += 1;
+        showNotification(`➕ ${product.name} agregado a la lista (x${existing.quantity})`, 'success');
     } else {
         purchaseList.push({ ...product, quantity: 1 });
+        showNotification(`📝 ${product.name} agregado a la lista`, 'success');
     }
     updatePurchaseListDisplay();
 }
@@ -1597,8 +1625,17 @@ function updatePurchaseListDisplay() {
     purchaseListElement.innerHTML = '';
     if (purchaseList.length === 0) {
         purchaseListElement.innerHTML = '<li style="text-align:center;color:#aaa;">Vacía</li>';
+        // Actualizar botón
+        if (sendDiscordBtn) {
+            sendDiscordBtn.textContent = 'Enviar Lista a Discord';
+            sendDiscordBtn.disabled = true;
+            sendDiscordBtn.style.opacity = '0.6';
+        }
         return;
     }
+    
+    const totalItems = purchaseList.reduce((sum, item) => sum + item.quantity, 0);
+    
     purchaseList.forEach((item, idx) => {
         purchaseListElement.innerHTML += `
             <li>
@@ -1607,24 +1644,57 @@ function updatePurchaseListDisplay() {
             </li>
         `;
     });
+    
+    // Actualizar botón con contador
+    if (sendDiscordBtn) {
+        sendDiscordBtn.textContent = `Enviar Lista (${totalItems} items)`;
+        sendDiscordBtn.disabled = false;
+        sendDiscordBtn.style.opacity = '1';
+    }
 }
 
 // Enviar la lista a Discord
 async function sendPurchaseListToDiscord() {
     if (purchaseList.length === 0) {
-        alert('La lista de compra está vacía.');
+        showNotification('❌ La lista de compra está vacía.', 'error');
         return;
     }
+    
+    // Obtener el usuario del input
+    const usernameInput = document.getElementById('username-input');
+    const username = usernameInput.value.trim();
+    
+    if (!username) {
+        showNotification('❌ Por favor ingresa tu usuario antes de enviar la lista.', 'error');
+        usernameInput.focus();
+        return;
+    }
+    
+    // Crear el mensaje con usuario y lista de productos
     const items = purchaseList.map(item => `• ${item.name} x${item.quantity}`).join('\n');
-    const content = `📝 **Nueva lista de compra enviada desde la tienda**\n\n${items}`;
-    await fetch('https://discord.com/api/webhooks/1402499129178984531/kF8JsLH4bJ427510eMdZrtpibKWas_QFc7mJ3PfrItgJMlw2H6DIt41gl-fHmQZ7sC_r', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content })
-    });
-    alert('¡Lista enviada a Discord!');
-    purchaseList.length = 0;
-    updatePurchaseListDisplay();
+    const totalItems = purchaseList.reduce((sum, item) => sum + item.quantity, 0);
+    const content = `📝 **Nueva lista de compra - Terraz Survival Store**\n\n👤 **Usuario:** ${username}\n📦 **Total de items:** ${totalItems}\n\n**Lista de productos:**\n${items}\n\n⏰ **Fecha:** ${new Date().toLocaleString('es-ES')}`;
+    
+    try {
+        await fetch('https://discord.com/api/webhooks/1402499129178984531/kF8JsLH4bJ427510eMdZrtpibKWas_QFc7mJ3PfrItgJMlw2H6DIt41gl-fHmQZ7sC_r', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content })
+        });
+        
+        // Guardar el usuario para futuras compras
+        saveUsername(username);
+        
+        showNotification(`✅ Lista enviada a Discord para ${username}!`, 'success');
+        
+        // Limpiar la lista (pero mantener el usuario)
+        purchaseList.length = 0;
+        updatePurchaseListDisplay();
+        
+    } catch (error) {
+        console.error('Error enviando a Discord:', error);
+        showNotification('❌ Error al enviar la lista a Discord.', 'error');
+    }
 }
 
 if (sendDiscordBtn) {
