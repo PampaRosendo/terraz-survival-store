@@ -20,8 +20,7 @@ if (!fs.existsSync(USERS_FILE)) {
 class User {
     constructor(userData) {
         this.id = userData.id || Date.now() + Math.random();
-        this.username = userData.username;
-        this.email = userData.email;
+    this.username = userData.username;
         this.password = userData.password;
         this.money = userData.money || 1000; // Dinero inicial
         this.createdAt = userData.createdAt || new Date().toISOString();
@@ -55,9 +54,9 @@ class User {
             const users = User.getAll();
             
             // Verificar si el usuario ya existe
-            const existingUser = users.find(u => u.email === userData.email || u.username === userData.username);
+            const existingUser = users.find(u => u.username === userData.username);
             if (existingUser) {
-                throw new Error('Usuario o email ya existe');
+                throw new Error('El nombre de usuario ya existe');
             }
 
             // Hash de la contraseña
@@ -78,11 +77,10 @@ class User {
         }
     }
 
-    // Buscar usuario por email
+    // Buscar usuario por username
     static findOne(query) {
         const users = User.getAll();
         return users.find(user => {
-            if (query.email) return user.email === query.email;
             if (query.username) return user.username === query.username;
             if (query.id) return user.id === query.id;
             return false;

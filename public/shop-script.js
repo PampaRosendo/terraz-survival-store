@@ -1,5 +1,25 @@
 // Datos de la tienda de Project Zomboid
 const shopData = {
+    vehicles: [
+        {
+            id: 201,
+            name: "Auto Deportivo",
+            description: "Vehículo rápido y elegante para escapar de los zombis.",
+            price: 5000,
+            weight: 1200,
+            image: "img/vehiculos/deportivo.png", // Ruta relativa o URL
+            stats: { velocidad: 95, durabilidad: 80, consumo: 60 }
+        },
+        {
+            id: 202,
+            name: "Camioneta 4x4",
+            description: "Ideal para cargar suministros y sobrevivientes.",
+            price: 7000,
+            weight: 1800,
+            image: "img/vehiculos/camioneta.png",
+            stats: { velocidad: 75, durabilidad: 95, consumo: 80 }
+        }
+    ],
     books: [
         {
             id: 1,
@@ -1358,6 +1378,7 @@ const shopData = {
 
 // Configuración de categorías y sus íconos
 const categoryConfig = {
+    vehicles: { name: 'Vehículos', icon: '🚗' },
     books: { name: 'Libros', icon: '📚' },
     food: { name: 'Comidas', icon: '🥫' },
     tools: { name: 'Herramientas', icon: '🔧' },
@@ -1487,7 +1508,7 @@ function displayProducts(category) {
     
     grid.innerHTML = products.map(product => `
         <div class="product-card" data-product-id="${product.id}">
-            <span class="product-icon">${product.icon}</span>
+            ${product.image ? `<img src="${product.image}" alt="${product.name}" class="product-img" style="width:100%;max-height:140px;object-fit:contain;margin-bottom:8px;">` : `<span class="product-icon">${product.icon || '🚗'}</span>`}
             <div class="product-name">${product.name}</div>
             <div class="product-description">${product.description}</div>
             <div class="product-stats">
@@ -1719,11 +1740,17 @@ async function processPurchase() {
             return;
         }
 
-        // Obtener email del usuario (desde localStorage si está logueado)
-        const userEmail = localStorage.getItem('userEmail') || prompt('Ingresa tu email para completar la compra:');
-        
-        if (!userEmail) {
-            showNotification('❌ Email requerido para completar la compra', 'error');
+        // Solo permitir tickets de vehículos
+        const onlyVehicles = cart.every(item => item.category === 'vehicles');
+        if (!onlyVehicles) {
+            showNotification('❌ Solo puedes pedir vehículos en este ticket. Elimina otros productos del carrito.', 'error');
+            return;
+        }
+
+        // Obtener usuario logueado
+        const username = localStorage.getItem('username') || prompt('Ingresa tu usuario para completar el pedido:');
+        if (!username) {
+            showNotification('❌ Usuario requerido para completar el pedido', 'error');
             return;
         }
 
@@ -1736,9 +1763,9 @@ async function processPurchase() {
             return;
         }
 
-        // Preparar datos de la compra
+        // Preparar datos del ticket
         const purchaseData = {
-            customerEmail: userEmail,
+            customerUsername: username,
             items: cart.map(item => ({
                 name: item.name,
                 quantity: item.quantity,

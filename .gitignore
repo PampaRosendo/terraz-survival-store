@@ -1,0 +1,7 @@
+# Archivos y carpetas a ignorar por Git
+.env
+data/
+node_modules/
+*.log
+.DS_Store
+npm-debug.log
