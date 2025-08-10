@@ -1393,8 +1393,211 @@ const categoryConfig = {
     brita_armor: { name: 'Brita Armor', icon: '🛡️' }
 };
 
-// Sistema de la tienda
-// Remove this entire duplicated/invalid block, as it is not part of the valid shopData structure.
+// Estado del jugador
+let playerState = {
+    money: 1500,
+    weight: 15.2,
+    maxWeight: 50.0,
+    inventory: [],
+    totalSpent: 0
+};
+
+// Variables globales
+let currentCategory = 'weapons';
+// let cart = []; // Sistema de carrito para Discord webhook (ya no se usa)
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar si el usuario está logueado
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        alert('Debes iniciar sesión para acceder a la tienda');
+        window.location.href = '/';
+        return;
+    }
+    
+    // Sincronizar dinero con los juegos
+    const savedMoney = localStorage.getItem('playerMoney');
+    if (savedMoney) {
+        playerState.money = parseInt(savedMoney);
+    }
+    
+    initializeShop();
+    loadUserInfo();
+    setupEventListeners();
+});
+
+function initializeShop() {
+    displayProducts(currentCategory);
+    updatePlayerStats();
+    updateInventoryDisplay();
+}
+
+function loadUserInfo() {
+    // Obtener información del usuario del localStorage o token
+    const userEmail = localStorage.getItem('userEmail') || 'superviviente@terraz.com';
+    document.getElementById('welcome-user').textContent = `Bienvenido, ${userEmail}`;
+}
+
+function setupEventListeners() {
+    // Botones de categorías
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const category = this.getAttribute('data-category');
+            switchCategory(category);
+        });
+    });
+
+    // Botón de juegos
+    document.getElementById('games-btn').addEventListener('click', function() {
+        window.location.href = '/games.html';
+    });
+
+    // Botón de logout
+    document.getElementById('logout-btn-shop').addEventListener('click', function() {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userEmail');
+            window.location.href = '/';
+        }
+    });
+
+    // Modal
+    const modal = document.getElementById('purchase-modal');
+    const closeBtn = document.querySelector('.close');
+    
+    closeBtn.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+    
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Escuchar actualizaciones de dinero desde los juegos
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'updateMoney') {
+            playerState.money = event.data.money;
+            updatePlayerStats();
+            displayProducts(currentCategory);
+        }
+    });
+}
+
+function switchCategory(category) {
+    currentCategory = category;
+    
+    // Actualizar botones
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-category="${category}"]`).classList.add('active');
+    
+    // Mostrar productos
+    displayProducts(category);
+}
+
+function displayProducts(category) {
+    const grid = document.getElementById('products-grid');
+    const products = shopData[category] || [];
+    
+    grid.innerHTML = products.map(product => `
+        <div class="product-card" data-product-id="${product.id}">
+            ${product.image ? `<img src="${product.image}" alt="${product.name}" class="product-img" style="width:100%;max-height:140px;object-fit:contain;margin-bottom:8px;">` : `<span class="product-icon">${product.icon || '🚗'}</span>`}
+            <div class="product-name">${product.name}</div>
+            <div class="product-description">${product.description}</div>
+            <div class="product-stats">
+                ${Object.entries(product.stats || {}).map(([key, value]) => `
+                    <div class="product-stat">
+                        <span class="stat-name">${key}:</span>
+                        <div class="stat-bar">
+                            <div class="bar">
+                                <div class="bar-fill" style="width: ${value}%"></div>
+                            </div>
+                            <span>${value}%</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="product-price">
+                <span class="price">$${product.price}</span>
+                <button class="buy-btn" onclick="buyProduct(${product.id})" 
+                        ${playerState.money < product.price ? 'disabled' : ''}>
+                    ${playerState.money < product.price ? 'Sin dinero' : 'Comprar'}
+                </button>
+                <button class="cart-btn" onclick="addToPurchaseList(${product.id})" 
+                        style="background: #ff6b35; margin-left: 5px;">
+                    ➕ Lista
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// --- NUEVO SISTEMA DE LISTA DE COMPRA ---
+const purchaseList = [];
+const purchaseListElement = document.getElementById('purchase-list');
+const sendDiscordBtn = document.getElementById('send-discord-btn');
+
+// Agregar producto a la lista
+function addToPurchaseList(productId) {
+    const product = findProductById(productId);
+    if (!product) return;
+    const existing = purchaseList.find(item => item.id === productId);
+    if (existing) {
+        existing.quantity += 1;
+    } else {
+        purchaseList.push({ ...product, quantity: 1 });
+    }
+    updatePurchaseListDisplay();
+}
+
+// Quitar producto de la lista
+function removeFromPurchaseList(index) {
+    purchaseList.splice(index, 1);
+    updatePurchaseListDisplay();
+}
+
+// Mostrar la lista en el aside
+function updatePurchaseListDisplay() {
+    purchaseListElement.innerHTML = '';
+    if (purchaseList.length === 0) {
+        purchaseListElement.innerHTML = '<li style="text-align:center;color:#aaa;">Vacía</li>';
+        return;
+    }
+    purchaseList.forEach((item, idx) => {
+        purchaseListElement.innerHTML += `
+            <li>
+                <span>${item.name} x${item.quantity}</span>
+                <button class="remove-btn" onclick="removeFromPurchaseList(${idx})">🗑️</button>
+            </li>
+        `;
+    });
+}
+
+// Enviar la lista a Discord
+async function sendPurchaseListToDiscord() {
+    if (purchaseList.length === 0) {
+        alert('La lista de compra está vacía.');
+        return;
+    }
+    const items = purchaseList.map(item => `• ${item.name} x${item.quantity}`).join('\n');
+    const content = `📝 **Nueva lista de compra enviada desde la tienda**\n\n${items}`;
+    await fetch('https://discord.com/api/webhooks/1402499129178984531/kF8JsLH4bJ427510eMdZrtpibKWas_QFc7mJ3PfrItgJMlw2H6DIt41gl-fHmQZ7sC_r', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+    });
+    alert('¡Lista enviada a Discord!');
+    purchaseList.length = 0;
+    updatePurchaseListDisplay();
+}
+
+if (sendDiscordBtn) {
+    sendDiscordBtn.onclick = sendPurchaseListToDiscord;
+}
 
 // Estado del jugador
 let playerState = {
@@ -1530,114 +1733,118 @@ function displayProducts(category) {
                         ${playerState.money < product.price ? 'disabled' : ''}>
                     ${playerState.money < product.price ? 'Sin dinero' : 'Comprar'}
                 </button>
-                <button class="cart-btn" onclick="addToCart(${product.id})" 
-                        style="background: #2196F3; margin-left: 5px;">
-                    🛒 Carrito
+                <button class="cart-btn" onclick="addToPurchaseList(${product.id})" 
+                        style="background: #ff6b35; margin-left: 5px;">
+                    ➕ Lista
                 </button>
             </div>
         </div>
     `).join('');
 }
 
-function buyProduct(productId) {
+// --- NUEVO SISTEMA DE LISTA DE COMPRA ---
+const purchaseList = [];
+const purchaseListElement = document.getElementById('purchase-list');
+const sendDiscordBtn = document.getElementById('send-discord-btn');
+
+// Agregar producto a la lista
+function addToPurchaseList(productId) {
     const product = findProductById(productId);
     if (!product) return;
-    
-    if (playerState.money < product.price) {
-        showNotification('No tienes suficiente dinero!', 'error');
-        return;
-    }
-    
-    if (playerState.weight + product.weight > playerState.maxWeight) {
-        showNotification('No puedes cargar más peso!', 'error');
-        return;
-    }
-    
-    // Realizar compra
-    playerState.money -= product.price;
-    playerState.weight += product.weight;
-    playerState.totalSpent += product.price;
-    
-    // Agregar al inventario
-    const existingItem = playerState.inventory.find(item => item.id === product.id);
-    if (existingItem) {
-        existingItem.quantity += 1;
+    const existing = purchaseList.find(item => item.id === productId);
+    if (existing) {
+        existing.quantity += 1;
     } else {
-        playerState.inventory.push({
-            ...product,
-            quantity: 1
-        });
+        purchaseList.push({ ...product, quantity: 1 });
     }
-    
-    // Actualizar UI
-    updatePlayerStats();
-    updateInventoryDisplay();
-    displayProducts(currentCategory);
-    
-    // Animación y notificación
-    const productCard = document.querySelector(`[data-product-id="${productId}"]`);
-    productCard.classList.add('purchased');
-    setTimeout(() => productCard.classList.remove('purchased'), 500);
-    
-    showNotification(`¡${product.name} comprado exitosamente!`, 'success');
+    updatePurchaseListDisplay();
 }
 
-function findProductById(id) {
-    for (const category in shopData) {
-        const product = shopData[category].find(p => p.id === id);
-        if (product) return product;
-    }
-    return null;
+// Quitar producto de la lista
+function removeFromPurchaseList(index) {
+    purchaseList.splice(index, 1);
+    updatePurchaseListDisplay();
 }
 
-function updatePlayerStats() {
-    document.getElementById('player-money').textContent = playerState.money;
-    document.getElementById('inventory-slots').textContent = 
-        `${playerState.inventory.reduce((sum, item) => sum + item.quantity, 0)}/20`;
-    document.getElementById('player-weight').textContent = `${playerState.weight.toFixed(1)}kg`;
-    document.getElementById('total-spent').textContent = playerState.totalSpent;
-    
-    // Guardar dinero en localStorage para sincronización
-    localStorage.setItem('playerMoney', playerState.money.toString());
-}
-
-function updateInventoryDisplay() {
-    const grid = document.getElementById('inventory-grid');
-    
-    if (playerState.inventory.length === 0) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #8b4513; padding: 20px;">Tu inventario está vacío. ¡Compra algunos suministros!</div>';
+// Mostrar la lista en el aside
+function updatePurchaseListDisplay() {
+    purchaseListElement.innerHTML = '';
+    if (purchaseList.length === 0) {
+        purchaseListElement.innerHTML = '<li style="text-align:center;color:#aaa;">Vacía</li>';
         return;
     }
+    purchaseList.forEach((item, idx) => {
+        purchaseListElement.innerHTML += `
+            <li>
+                <span>${item.name} x${item.quantity}</span>
+                <button class="remove-btn" onclick="removeFromPurchaseList(${idx})">🗑️</button>
+            </li>
+        `;
+    });
+}
+
+// Enviar la lista a Discord
+async function sendPurchaseListToDiscord() {
+    if (purchaseList.length === 0) {
+        alert('La lista de compra está vacía.');
+        return;
+    }
+    const items = purchaseList.map(item => `• ${item.name} x${item.quantity}`).join('\n');
+    const content = `📝 **Nueva lista de compra enviada desde la tienda**\n\n${items}`;
+    await fetch('https://discord.com/api/webhooks/1402499129178984531/kF8JsLH4bJ427510eMdZrtpibKWas_QFc7mJ3PfrItgJMlw2H6DIt41gl-fHmQZ7sC_r', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+    });
+    alert('¡Lista enviada a Discord!');
+    purchaseList.length = 0;
+    updatePurchaseListDisplay();
+}
+
+if (sendDiscordBtn) {
+    sendDiscordBtn.onclick = sendPurchaseListToDiscord;
+}
+
+// Cambiar los botones de los productos para usar la lista
+function displayProducts(category) {
+    const grid = document.getElementById('products-grid');
+    const products = shopData[category] || [];
     
-    grid.innerHTML = playerState.inventory.map(item => `
-        <div class="inventory-item">
-            <span class="inventory-item-icon">${item.icon}</span>
-            <div class="inventory-item-name">${item.name}</div>
-            <div class="inventory-item-quantity">Cantidad: ${item.quantity}</div>
+    grid.innerHTML = products.map(product => `
+        <div class="product-card" data-product-id="${product.id}">
+            ${product.image ? `<img src="${product.image}" alt="${product.name}" class="product-img" style="width:100%;max-height:140px;object-fit:contain;margin-bottom:8px;">` : `<span class="product-icon">${product.icon || '🚗'}</span>`}
+            <div class="product-name">${product.name}</div>
+            <div class="product-description">${product.description}</div>
+            <div class="product-stats">
+                ${Object.entries(product.stats || {}).map(([key, value]) => `
+                    <div class="product-stat">
+                        <span class="stat-name">${key}:</span>
+                        <div class="stat-bar">
+                            <div class="bar">
+                                <div class="bar-fill" style="width: ${value}%"></div>
+                            </div>
+                            <span>${value}%</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="product-price">
+                <span class="price">$${product.price}</span>
+                <button class="buy-btn" onclick="buyProduct(${product.id})" 
+                        ${playerState.money < product.price ? 'disabled' : ''}>
+                    ${playerState.money < product.price ? 'Sin dinero' : 'Comprar'}
+                </button>
+                <button class="cart-btn" onclick="addToPurchaseList(${product.id})" 
+                        style="background: #ff6b35; margin-left: 5px;">
+                    ➕ Lista
+                </button>
+            </div>
         </div>
     `).join('');
 }
 
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    
-    if (type === 'error') {
-        notification.style.background = 'linear-gradient(135deg, #8b0000 0%, #dc143c 100%)';
-    }
-    
-    document.body.appendChild(notification);
-    
-    // Mostrar notificación
-    setTimeout(() => notification.classList.add('show'), 100);
-    
-    // Ocultar y remover después de 3 segundos
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => document.body.removeChild(notification), 300);
-    }, 3000);
-}
+// Inicializar la lista al cargar
+updatePurchaseListDisplay();
 
 // Función para simular eventos aleatorios (opcional)
 function randomEvent() {
