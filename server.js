@@ -18,9 +18,7 @@ app.use(express.json());
 // Servir archivos estáticos (frontend)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes - sistema simple de usuario
-const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes);
+// Aquí puedes agregar rutas futuras si lo necesitas
 
 // Import admin routes con sistema persistente
 const adminRoutes = require('./routes/adminRoutes-persistent');
