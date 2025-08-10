@@ -70,7 +70,7 @@ registerForm.addEventListener('submit', async (e) => {
     
     const formData = new FormData(registerForm);
     const userData = {
-        username: formData.get('username'),
+        email: formData.get('username'),
         password: formData.get('password')
     };
     
@@ -93,7 +93,7 @@ loginForm.addEventListener('submit', async (e) => {
     
     const formData = new FormData(loginForm);
     const userData = {
-        username: formData.get('username'),
+        email: formData.get('username'),
         password: formData.get('password')
     };
     
@@ -104,7 +104,7 @@ loginForm.addEventListener('submit', async (e) => {
         
         // Guardar datos en localStorage
     localStorage.setItem('authToken', currentToken);
-    localStorage.setItem('username', userData.username);
+    localStorage.setItem('username', userData.email);
         
         showMessage(loginMessage, '¡Inicio de sesión exitoso! Redirigiendo a la tienda...', true);
         
