@@ -69,10 +69,10 @@ registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const formData = new FormData(registerForm);
-    const userData = {
-        email: formData.get('username'),
-        password: formData.get('password')
-    };
+        const userData = {
+            username: formData.get('username'),
+            password: formData.get('password')
+        };
     
     try {
         const response = await makeRequest(`${API_BASE_URL}/auth/register`, 'POST', userData);
@@ -92,10 +92,10 @@ loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const formData = new FormData(loginForm);
-    const userData = {
-        email: formData.get('username'),
-        password: formData.get('password')
-    };
+        const userData = {
+            username: formData.get('username'),
+            password: formData.get('password')
+        };
     
     try {
         const response = await makeRequest(`${API_BASE_URL}/auth/login`, 'POST', userData);
@@ -103,8 +103,8 @@ loginForm.addEventListener('submit', async (e) => {
         currentToken = response.token;
         
         // Guardar datos en localStorage
-    localStorage.setItem('authToken', currentToken);
-    localStorage.setItem('username', userData.email);
+            localStorage.setItem('authToken', currentToken);
+            localStorage.setItem('username', userData.username);
         
         showMessage(loginMessage, '¡Inicio de sesión exitoso! Redirigiendo a la tienda...', true);
         
@@ -141,7 +141,7 @@ async function loadUsers() {
         if (response.users && response.users.length > 0) {
             usersList.innerHTML = response.users.map(user => `
                 <div class="user-item">
-                    <div class="user-email">${user.email || ''}</div>
+                    <div class="user-username">${user.username || ''}</div>
                     <div class="user-id">ID: ${user._id || ''}</div>
                 </div>
             `).join('');

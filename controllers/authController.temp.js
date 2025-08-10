@@ -7,27 +7,22 @@ const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        
+        const { username, password } = req.body;
         // Verificar si el usuario ya existe
-        const existingUser = users.find(user => user.email === email);
+        const existingUser = users.find(user => user.username === username);
         if (existingUser) {
             return res.status(400).json({ error: 'El usuario ya existe' });
         }
-        
         // Hashear contraseña
         const hashedPassword = await bcrypt.hash(password, 10);
-        
         // Crear usuario
         const newUser = {
             _id: Date.now().toString(),
-            email: email,
+            username: username,
             password: hashedPassword,
             createdAt: new Date()
         };
-        
         users.push(newUser);
-        
         res.status(201).json({ 
             message: 'Usuario creado exitosamente', 
             userId: newUser._id 
@@ -39,23 +34,19 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        
+        const { username, password } = req.body;
         // Buscar usuario
-        const user = users.find(user => user.email === email);
+        const user = users.find(user => user.username === username);
         if (!user) {
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
-        
         // Verificar contraseña
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
-        
         // Crear token
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret_key');
-        
         res.json({ 
             token, 
             message: 'Inicio de sesión exitoso' 
@@ -70,10 +61,9 @@ exports.getAllUsers = async (req, res) => {
         // Retornar usuarios sin contraseñas
         const usersWithoutPasswords = users.map(user => ({
             _id: user._id,
-            email: user.email,
+            username: user.username,
             createdAt: user.createdAt
         }));
-        
         res.json({ 
             users: usersWithoutPasswords, 
             count: usersWithoutPasswords.length 
