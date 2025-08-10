@@ -1404,18 +1404,9 @@ let playerState = {
 
 // Variables globales
 let currentCategory = 'weapons';
-let cart = []; // Sistema de carrito para Discord webhook
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
-    // Verificar si el usuario está logueado
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-        alert('Debes iniciar sesión para acceder a la tienda');
-        window.location.href = '/';
-        return;
-    }
-    
     // Sincronizar dinero con los juegos
     const savedMoney = localStorage.getItem('playerMoney');
     if (savedMoney) {
@@ -1423,20 +1414,83 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     initializeShop();
-    loadUserInfo();
     setupEventListeners();
 });
 
 function initializeShop() {
     displayProducts(currentCategory);
     updatePlayerStats();
-    updateInventoryDisplay();
+    updatePurchaseListDisplay();
 }
 
-function loadUserInfo() {
-    // Obtener información del usuario del localStorage o token
-    const userEmail = localStorage.getItem('userEmail') || 'superviviente@terraz.com';
-    document.getElementById('welcome-user').textContent = `Bienvenido, ${userEmail}`;
+// Función para encontrar producto por ID
+function findProductById(productId) {
+    for (const category in shopData) {
+        const product = shopData[category].find(p => p.id === productId);
+        if (product) return product;
+    }
+    return null;
+}
+
+// Función para comprar producto (agregar al inventario)
+function buyProduct(productId) {
+    const product = findProductById(productId);
+    if (!product) return;
+    
+    if (playerState.money < product.price) {
+        showNotification('❌ No tienes suficiente dinero', 'error');
+        return;
+    }
+    
+    // Deducir dinero
+    playerState.money -= product.price;
+    playerState.totalSpent += product.price;
+    
+    // Agregar al inventario
+    const existing = playerState.inventory.find(item => item.id === productId);
+    if (existing) {
+        existing.quantity += 1;
+    } else {
+        playerState.inventory.push({ ...product, quantity: 1 });
+    }
+    
+    // Actualizar displays
+    updatePlayerStats();
+    updateInventoryDisplay();
+    displayProducts(currentCategory);
+    
+    showNotification(`✅ ${product.name} comprado!`, 'success');
+}
+
+// Actualizar estadísticas del jugador
+function updatePlayerStats() {
+    document.getElementById('player-money').textContent = playerState.money;
+    document.getElementById('inventory-slots').textContent = `${playerState.inventory.length}/20`;
+    document.getElementById('player-weight').textContent = `${playerState.weight}kg`;
+    document.getElementById('total-spent').textContent = playerState.totalSpent;
+}
+
+// Actualizar display del inventario
+function updateInventoryDisplay() {
+    const inventoryGrid = document.getElementById('inventory-grid');
+    if (!inventoryGrid) return;
+    
+    inventoryGrid.innerHTML = '';
+    
+    if (playerState.inventory.length === 0) {
+        inventoryGrid.innerHTML = '<p style="text-align:center;color:#aaa;">Inventario vacío</p>';
+        return;
+    }
+    
+    playerState.inventory.forEach(item => {
+        inventoryGrid.innerHTML += `
+            <div class="inventory-item">
+                <span class="item-icon">${item.icon || '📦'}</span>
+                <span class="item-name">${item.name}</span>
+                <span class="item-quantity">x${item.quantity}</span>
+            </div>
+        `;
+    });
 }
 
 function setupEventListeners() {
@@ -1449,32 +1503,12 @@ function setupEventListeners() {
     });
 
     // Botón de juegos
-    document.getElementById('games-btn').addEventListener('click', function() {
-        window.location.href = '/games.html';
-    });
-
-    // Botón de logout
-    document.getElementById('logout-btn-shop').addEventListener('click', function() {
-        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userEmail');
-            window.location.href = '/';
-        }
-    });
-
-    // Modal
-    const modal = document.getElementById('purchase-modal');
-    const closeBtn = document.querySelector('.close');
-    
-    closeBtn.addEventListener('click', function() {
-        modal.style.display = 'none';
-    });
-    
-    window.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
+    const gamesBtn = document.getElementById('games-btn');
+    if (gamesBtn) {
+        gamesBtn.addEventListener('click', function() {
+            window.location.href = '/games.html';
+        });
+    }
 
     // Escuchar actualizaciones de dinero desde los juegos
     window.addEventListener('message', function(event) {
@@ -1535,8 +1569,6 @@ function displayProducts(category) {
         </div>
     `).join('');
 }
-
-// --- NUEVO SISTEMA DE LISTA DE COMPRA ---
 const purchaseList = [];
 const purchaseListElement = document.getElementById('purchase-list');
 const sendDiscordBtn = document.getElementById('send-discord-btn');
@@ -1599,227 +1631,7 @@ if (sendDiscordBtn) {
     sendDiscordBtn.onclick = sendPurchaseListToDiscord;
 }
 
-// Cambiar los botones de los productos para usar la lista
-function displayProducts(category) {
-    const grid = document.getElementById('products-grid');
-    const products = shopData[category] || [];
-    
-    grid.innerHTML = products.map(product => `
-        <div class="product-card" data-product-id="${product.id}">
-            ${product.image ? `<img src="${product.image}" alt="${product.name}" class="product-img" style="width:100%;max-height:140px;object-fit:contain;margin-bottom:8px;">` : `<span class="product-icon">${product.icon || '🚗'}</span>`}
-            <div class="product-name">${product.name}</div>
-            <div class="product-description">${product.description}</div>
-            <div class="product-stats">
-                ${Object.entries(product.stats || {}).map(([key, value]) => `
-                    <div class="product-stat">
-                        <span class="stat-name">${key}:</span>
-                        <div class="stat-bar">
-                            <div class="bar">
-                                <div class="bar-fill" style="width: ${value}%"></div>
-                            </div>
-                            <span>${value}%</span>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-            <div class="product-price">
-                <span class="price">$${product.price}</span>
-                <button class="buy-btn" onclick="buyProduct(${product.id})" 
-                        ${playerState.money < product.price ? 'disabled' : ''}>
-                    ${playerState.money < product.price ? 'Sin dinero' : 'Comprar'}
-                </button>
-                <button class="cart-btn" onclick="addToPurchaseList(${product.id})" 
-                        style="background: #ff6b35; margin-left: 5px;">
-                    ➕ Lista
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Inicializar la lista al cargar
-updatePurchaseListDisplay();
-
-// Función para simular eventos aleatorios (opcional)
-function randomEvent() {
-    const events = [
-        { message: "¡Horda de zombis se acerca! Los precios de armas suben 20%", effect: () => {
-            Object.values(shopData.weapons).forEach(weapon => weapon.price = Math.floor(weapon.price * 1.2));
-            displayProducts(currentCategory);
-        }},
-        { message: "¡Comerciante generoso! 10% de descuento en medicina", effect: () => {
-            Object.values(shopData.medical).forEach(med => med.price = Math.floor(med.price * 0.9));
-            displayProducts(currentCategory);
-        }},
-        { message: "¡Encontraste $50 en un zombie!", effect: () => {
-            playerState.money += 50;
-            updatePlayerStats();
-        }}
-    ];
-    
-    const event = events[Math.floor(Math.random() * events.length)];
-    showNotification(event.message, 'success');
-    event.effect();
-}
-
-// Simular eventos aleatorios cada 2 minutos
-setInterval(randomEvent, 120000);
-
-// ================================
-// SISTEMA DE CARRITO PARA DISCORD
-// ================================
-
-// Agregar producto al carrito
-function addToCart(productId) {
-    const product = findProductById(productId);
-    if (!product) return;
-    
-    // Verificar si ya existe en el carrito
-    const existingItem = cart.find(item => item.id === productId);
-    
-    if (existingItem) {
-        existingItem.quantity += 1;
-        showNotification(`➕ ${product.name} agregado al carrito (${existingItem.quantity})`, 'success');
-    } else {
-        cart.push({
-            ...product,
-            quantity: 1,
-            category: currentCategory
-        });
-        showNotification(`🛒 ${product.name} agregado al carrito`, 'success');
-    }
-    
-    updateCartDisplay();
-    updateCartCounter();
-}
-
-// Remover item del carrito
-function removeFromCart(index) {
-    const removedItem = cart[index];
-    cart.splice(index, 1);
-    showNotification(`🗑️ ${removedItem.name} removido del carrito`, 'warning');
-    updateCartDisplay();
-    updateCartCounter();
-}
-
-// Actualizar contador del carrito
-function updateCartCounter() {
-    const counter = document.getElementById('cart-counter');
-    if (counter) {
-        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-        counter.textContent = totalItems;
-        counter.style.display = totalItems > 0 ? 'block' : 'none';
-    }
-}
-
-// Mostrar/ocultar carrito
-function toggleCart() {
-    const panel = document.getElementById('cart-panel');
-    panel.style.display = (panel.style.display === 'flex' || panel.style.display === '') ? 'none' : 'flex';
-}
-
-// ================================
-// SISTEMA DE DISCORD WEBHOOK
-// ================================
-
-// URL base del API
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3001/api' 
-    : '/api';
-
-// Webhook de Discord
-const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1402499129178984531/kF8JsLH4bJ427510eMdZrtpibKWas_QFc7mJ3PfrItgJMlw2H6DIt41gl-fHmQZ7sC_r";
-
-// Función para procesar compra final y enviar a Discord
-async function processPurchase() {
-    try {
-        // Verificar que hay items en el carrito
-        if (cart.length === 0) {
-            showNotification('❌ Tu carrito está vacío', 'error');
-            return;
-        }
-
-        // Solo permitir tickets de vehículos
-        const onlyVehicles = cart.every(item => item.category === 'vehicles');
-        if (!onlyVehicles) {
-            showNotification('❌ Solo puedes pedir vehículos en este ticket. Elimina otros productos del carrito.', 'error');
-            return;
-        }
-
-        // Obtener usuario logueado
-        const username = localStorage.getItem('username') || prompt('Ingresa tu usuario para completar el pedido:');
-        if (!username) {
-            showNotification('❌ Usuario requerido para completar el pedido', 'error');
-            return;
-        }
-
-        // Calcular total
-        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-        // Verificar fondos
-        if (playerState.money < total) {
-            showNotification(`❌ Fondos insuficientes. Necesitas $${total - playerState.money} más`, 'error');
-            return;
-        }
-
-        // Preparar datos del ticket
-        const purchaseData = {
-            customerUsername: username,
-            items: cart.map(item => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price,
-                category: item.category || 'unknown'
-            })),
-            total: total
-        };
-
-        // Mostrar loading
-        showNotification('🔄 Procesando compra...', 'info');
-
-        // Enviar compra al backend (que enviará a Discord)
-        const response = await fetch(`${API_BASE_URL}/shop/purchase`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(purchaseData)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            // Compra exitosa
-            playerState.money -= total;
-            updatePlayerStats();
-            
-            // Limpiar carrito
-            cart.length = 0;
-            updateCartDisplay();
-            
-            // Mostrar éxito
-            showNotification(`🎉 ${result.message}`, 'success');
-            showNotification(`📋 ID de pedido: ${result.orderId}`, 'info');
-            
-            if (result.discordSent) {
-                showNotification('📨 Ticket enviado a Discord automáticamente', 'success');
-            }
-            
-            if (result.warning) {
-                showNotification(`⚠️ ${result.warning}`, 'warning');
-            }
-            
-        } else {
-            throw new Error(result.error || 'Error procesando compra');
-        }
-
-    } catch (error) {
-        console.error('Error en compra:', error);
-        showNotification(`❌ Error: ${error.message}`, 'error');
-    }
-}
-
-// Función para mostrar notificaciones mejoradas
+// Función para mostrar notificaciones
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
@@ -1863,77 +1675,4 @@ function showNotification(message, type = 'info') {
             notification.remove();
         }
     }, 5000);
-}
-
-// Agregar botón de compra al carrito
-function updateCartDisplay() {
-    const cartItems = document.getElementById('cart-items');
-    const cartTotal = document.getElementById('cart-total');
-    
-    if (!cartItems || !cartTotal) return;
-    
-    // Limpiar contenido actual
-    cartItems.innerHTML = '';
-    
-    if (cart.length === 0) {
-        cartItems.innerHTML = '<p>Tu carrito está vacío</p>';
-        cartTotal.innerHTML = '<strong>Total: $0</strong>';
-        return;
-    }
-    
-    // Mostrar items del carrito
-    let total = 0;
-    cart.forEach((item, index) => {
-        const itemTotal = item.price * item.quantity;
-        total += itemTotal;
-        
-        cartItems.innerHTML += `
-            <div class="cart-item">
-                <span>${item.name} x${item.quantity}</span>
-                <span>$${itemTotal}</span>
-                <button onclick="removeFromCart(${index})" class="remove-btn">🗑️</button>
-            </div>
-        `;
-    });
-    
-    // Mostrar total y botón de compra
-    cartTotal.innerHTML = `
-        <strong>Total: $${total}</strong>
-        <button onclick="processPurchase()" class="purchase-btn" style="
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            width: 100%;
-            font-weight: bold;
-        ">
-            🛒 Finalizar Compra y Enviar a Discord
-        </button>
-    `;
-}
-
-// Enviar carrito a Discord
-async function sendCartToDiscord(cartItems, total) {
-    const itemsList = cartItems.map(item => `• ${item.name} x${item.quantity} ($${item.price * item.quantity})`).join('\n');
-    const content = `🛒 **Nueva compra en Terraz Survival Store**\n\n${itemsList}\n\n**Total:** $${total}`;
-    await fetch(DISCORD_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content })
-    });
-}
-
-// Lógica para el botón de compra
-if (document.getElementById('buy-btn')) {
-    document.getElementById('buy-btn').onclick = async function() {
-        const cartItems = getCartItems(); // Debe devolver [{name, price, quantity}]
-        const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        await sendCartToDiscord(cartItems, total);
-        alert('¡Compra enviada a Discord!');
-        clearCart();
-        toggleCart();
-    };
 }
